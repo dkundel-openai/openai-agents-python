@@ -134,3 +134,25 @@ def test_draw_graph(mock_agent):
         '"Handoff1" [label="Handoff1", shape=box, style=filled, style=rounded, '
         "fillcolor=lightyellow, width=1.5, height=0.8];" in graph.source
     )
+
+
+@pytest.fixture
+def circular_agents() -> Agent:
+    agent1 = Agent(name="Agent1")
+    agent2 = Agent(name="Agent2")
+    agent1.handoffs = [agent2]
+    agent2.handoffs = [agent1]
+    return agent1
+
+
+def test_get_all_nodes_handles_cycle(circular_agents: Agent) -> None:
+    result = get_all_nodes(circular_agents)
+    assert '"Agent1" [label="Agent1"' in result
+    assert '"Agent2" [label="Agent2"' in result
+
+
+def test_get_all_edges_handles_cycle(circular_agents: Agent) -> None:
+    result = get_all_edges(circular_agents)
+    assert result.count('"Agent1" -> "Agent2";') == 1
+    assert result.count('"Agent2" -> "Agent1";') == 1
+    assert '"Agent1" -> "__end__";' not in result

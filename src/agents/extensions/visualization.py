@@ -31,7 +31,9 @@ def get_main_graph(agent: Agent) -> str:
     return "".join(parts)
 
 
-def get_all_nodes(agent: Agent, parent: Optional[Agent] = None) -> str:
+def get_all_nodes(
+    agent: Agent, parent: Optional[Agent] = None, visited: Optional[set[str]] = None
+) -> str:
     """
     Recursively generates the nodes for the given agent and its handoffs in DOT format.
 
@@ -41,6 +43,12 @@ def get_all_nodes(agent: Agent, parent: Optional[Agent] = None) -> str:
     Returns:
         str: The DOT format string representing the nodes.
     """
+    if visited is None:
+        visited = set()
+    if agent.name in visited:
+        return ""
+    visited.add(agent.name)
+
     parts = []
 
     # Start and end the graph
@@ -76,12 +84,14 @@ def get_all_nodes(agent: Agent, parent: Optional[Agent] = None) -> str:
                 f"shape=box, style=filled, style=rounded, "
                 f"fillcolor=lightyellow, width=1.5, height=0.8];"
             )
-            parts.append(get_all_nodes(handoff))
+            parts.append(get_all_nodes(handoff, agent, visited))
 
     return "".join(parts)
 
 
-def get_all_edges(agent: Agent, parent: Optional[Agent] = None) -> str:
+def get_all_edges(
+    agent: Agent, parent: Optional[Agent] = None, visited: Optional[set[str]] = None
+) -> str:
     """
     Recursively generates the edges for the given agent and its handoffs in DOT format.
 
@@ -92,6 +102,12 @@ def get_all_edges(agent: Agent, parent: Optional[Agent] = None) -> str:
     Returns:
         str: The DOT format string representing the edges.
     """
+    if visited is None:
+        visited = set()
+    if agent.name in visited:
+        return ""
+    visited.add(agent.name)
+
     parts = []
 
     if not parent:
@@ -109,7 +125,7 @@ def get_all_edges(agent: Agent, parent: Optional[Agent] = None) -> str:
         if isinstance(handoff, Agent):
             parts.append(f"""
             "{agent.name}" -> "{handoff.name}";""")
-            parts.append(get_all_edges(handoff, agent))
+            parts.append(get_all_edges(handoff, agent, visited))
 
     if not agent.handoffs and not isinstance(agent, Tool):  # type: ignore
         parts.append(f'"{agent.name}" -> "__end__";')
